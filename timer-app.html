@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timer App</title>
+  <style>
+    :root {
+      --background: #f5f5f7;
+      --card-background: #ffffff;
+      --text-primary: #1d1d1f;
+      --text-secondary: #86868b;
+      --accent: #0066cc;
+      --accent-hover: #0077ed;
+      --border: #d2d2d7;
+      --button-text: #ffffff;
+      --shadow: rgba(0, 0, 0, 0.06);
+      --progress-background: #e5e5e5;
+      --progress-fill: #0066cc;
+      --green: #34c759;
+      --red: #ff3b30;
+    }
+
+    .dark-mode {
+      --background: #1d1d1f;
+      --card-background: #323236;
+      --text-primary: #f5f5f7;
+      --text-secondary: #aeaeb2;
+      --accent: #0a84ff;
+      --accent-hover: #409cff;
+      --border: #434343;
+      --shadow: rgba(0, 0, 0, 0.3);
+      --progress-background: #3a3a3c;
+      --progress-fill: #0a84ff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card-background);
+      border-radius: 20px;
+      box-shadow: 0 8px 30px var(--shadow);
+      padding: 32px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    h1 {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 28px;
+      margin-bottom: 24px;
+      letter-spacing: -0.5px;
+    }
+
+    .dark-mode-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      color: var(--text-primary);
+      transition: transform 0.2s ease;
+    }
+
+    .dark-mode-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .tabs {
+      display: flex;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      background-color: var(--progress-background);
+      padding: 4px;
+      position: relative;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      z-index: 1;
+      text-align: center;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      transition: color 0.3s ease;
+    }
+
+    .tab.active {
+      color: var(--text-primary);
+    }
+
+    .tab-selector {
+      position: absolute;
+      height: calc(100% - 8px);
+      width: calc(50% - 4px);
+      border-radius: 8px;
+      background-color: var(--card-background);
+      top: 4px;
+      left: 4px;
+      transition: transform 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-selector.right {
+      transform: translateX(calc(100% + 0px));
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .timer-display {
+      font-size: 64px;
+      font-weight: 500;
+      letter-spacing: -2px;
+      margin: 30px 0;
+      color: var(--text-primary);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background: var(--accent);
+      color: var(--button-text);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 100px;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      background: var(--text-secondary);
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    input[type="time"] {
+      background-color: var(--progress-background);
+      border: none;
+      color: var(--text-primary);
+      font-size: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      width: 140px;
+      text-align: center;
+      appearance: none;
+      outline: none;
+    }
+
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.5);
+      cursor: pointer;
+    }
+
+    .dark-mode input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+    }
+
+    .pomodoro-status {
+      display: inline-block;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-primary);
+      background-color: var(--progress-background);
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+
+    .status-focus {
+      background-color: rgba(10, 132, 255, 0.1);
+      color: var(--accent);
+    }
+
+    .status-rest {
+      background-color: rgba(52, 199, 89, 0.1);
+      color: var(--green);
+    }
+
+    .progress-container {
+      margin-top: 30px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--progress-background);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--progress-fill);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 1s linear;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <button class="dark-mode-toggle" id="dark-mode-toggle">☀️</button>
+  
+  <div class="container">
+    <h1>Timer</h1>
+    
+    <div class="tabs">
+      <div class="tab active" id="tab-deadline">Deadline</div>
+      <div class="tab" id="tab-pomodoro">Pomodoro</div>
+      <div class="tab-selector" id="tab-selector"></div>
+    </div>
+    
+    <div class="tab-content active" id="content-deadline">
+      <div class="input-group">
+        <label for="deadline-time">Set Target Time</label>
+        <input type="time" id="deadline-time" required>
+      </div>
+      
+      <div class="timer-display" id="deadline-display">00:00:00</div>
+      
+      <div class="controls">
+        <button id="deadline-start">Start</button>
+        <button id="deadline-stop" disabled>Pause</button>
+        <button id="deadline-reset" disabled>Reset</button>
+      </div>
+      
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="deadline-progress"></div>
+        </div>
+        <div class="progress-label">
+          <span>Start</span>
+          <span>Target Time</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="content-pomodoro">
+      <div class="pomodoro-status status-focus" id="pomodoro-status">Focus Time</div>
+      <div class="timer-display" id="pomodoro-display">25:00</div>
+      
+      <div class="controls">
+        <button id="pomodoro-start">Start</button>
+        <button id="pomodoro-stop" disabled>Pause</button>
+        <button id="pomodoro-reset" disabled>Reset</button>
+      </div>
+      
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="pomodoro-progress"></div>
+        </div>
+        <div class="progress-label">
+          <span>Start</span>
+          <span>End</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const body = document.body;
+    const container = document.querySelector('.container');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const tabSelector = document.getElementById('tab-selector');
+    
+    // Deadline Timer Elements
+    const deadlineTimeInput = document.getElementById('deadline-time');
+    const deadlineDisplay = document.getElementById('deadline-display');
+    const deadlineStartBtn = document.getElementById('deadline-start');
+    const deadlineStopBtn = document.getElementById('deadline-stop');
+    const deadlineResetBtn = document.getElementById('deadline-reset');
+    const deadlineProgress = document.getElementById('deadline-progress');
+    
+    // Pomodoro Timer Elements
+    const pomodoroDisplay = document.getElementById('pomodoro-display');
+    const pomodoroStatus = document.getElementById('pomodoro-status');
+    const pomodoroStartBtn = document.getElementById('pomodoro-start');
+    const pomodoroStopBtn = document.getElementById('pomodoro-stop');
+    const pomodoroResetBtn = document.getElementById('pomodoro-reset');
+    const pomodoroProgress = document.getElementById('pomodoro-progress');
+    
+    // Dark Mode Toggle
+    darkModeToggle.addEventListener('click', () => {
+      body.classList.toggle('dark-mode');
+      const isDarkMode = body.classList.contains('dark-mode');
+      darkModeToggle.textContent = isDarkMode ? '🌙' : '☀️';
+      localStorage.setItem('darkMode', isDarkMode ? 'true' : 'false');
+    });
+    
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      body.classList.add('dark-mode');
+      darkModeToggle.textContent = '🌙';
+    }
+    
+    // Tab Switching Logic
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        if (index === 1) {
+          tabSelector.classList.add('right');
+        } else {
+          tabSelector.classList.remove('right');
+        }
+        
+        const targetId = tab.id.replace('tab-', 'content-');
+        tabContents.forEach(content => {
+          content.classList.remove('active');
+          if (content.id === targetId) {
+            content.classList.add('active');
+          }
+        });
+      });
+    });
+    
+    // Audio for timer completion
+    const alarmSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'+'A'.repeat(1024));
+    alarmSound.type = 'audio/wav';
+    
+    // Deadline Timer Logic
+    let deadlineInterval;
+    let deadlineEndTime;
+    let deadlineTotalSeconds = 0;
+    let deadlineRemainingSeconds = 0;
+    
+    function updateDeadlineDisplay(seconds) {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      deadlineDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      
+      // Update progress bar
+      if (deadlineTotalSeconds > 0) {
+        const progress = ((deadlineTotalSeconds - seconds) / deadlineTotalSeconds) * 100;
+        deadlineProgress.style.width = `${progress}%`;
+      }
+    }
+    
+    function startDeadlineTimer() {
+      const timeValue = deadlineTimeInput.value;
+      if (!timeValue) {
+        alert('Please set a deadline time');
+        return;
+      }
+      
+      const [hours, minutes] = timeValue.split(':').map(Number);
+      const now = new Date();
+      const target = new Date();
+      
+      // Set the target time
+      target.setHours(hours, minutes, 0, 0);
+      
+      // If the target time is in the past for today, set it for tomorrow
+      if (target <= now) {
+        target.setDate(target.getDate() + 1);
+      }
+      
+      deadlineEndTime = target;
+      deadlineRemainingSeconds = Math.floor((target - now) / 1000);
+      deadlineTotalSeconds = deadlineRemainingSeconds;
+      
+      updateDeadlineDisplay(deadlineRemainingSeconds);
+      
+      deadlineInterval = setInterval(() => {
+        const now = new Date();
+        deadlineRemainingSeconds = Math.floor((deadlineEndTime - now) / 1000);
+        
+        if (deadlineRemainingSeconds <= 0) {
+          clearInterval(deadlineInterval);
+          updateDeadlineDisplay(0);
+          alarmSound.play();
+          deadlineStartBtn.disabled = false;
+          deadlineStopBtn.disabled = true;
+          deadlineResetBtn.disabled = false;
+          return;
+        }
+        
+        updateDeadlineDisplay(deadlineRemainingSeconds);
+      }, 1000);
+      
+      deadlineStartBtn.disabled = true;
+      deadlineStopBtn.disabled = false;
+      deadlineResetBtn.disabled = false;
+    }
+    
+    function stopDeadlineTimer() {
+      clearInterval(deadlineInterval);
+      deadlineStartBtn.disabled = false;
+      deadlineStopBtn.disabled = true;
+    }
+    
+    function resetDeadlineTimer() {
+      clearInterval(deadlineInterval);
+      updateDeadlineDisplay(0);
+      deadlineProgress.style.width = '0%';
+      deadlineStartBtn.disabled = false;
+      deadlineStopBtn.disabled = true;
+      deadlineResetBtn.disabled = true;
+    }
+    
+    deadlineStartBtn.addEventListener('click', startDeadlineTimer);
+    deadlineStopBtn.addEventListener('click', stopDeadlineTimer);
+    deadlineResetBtn.addEventListener('click', resetDeadlineTimer);
+    
+    // Set the default deadline time to 30 minutes from now
+    function setDefaultDeadlineTime() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 30);
+      const hours = now.getHours().toString().padStart(2, '0');
+      const mins = now.getMinutes().toString().padStart(2, '0');
+      deadlineTimeInput.value = `${hours}:${mins}`;
+    }
+    
+    setDefaultDeadlineTime();
+    
+    // Pomodoro Timer Logic
+    const FOCUS_TIME = 25 * 60; // 25 minutes in seconds
+    const REST_TIME = 5 * 60;   // 5 minutes in seconds
+    
+    let pomodoroInterval;
+    let pomodoroTimeLeft = FOCUS_TIME;
+    let pomodoroMode = 'focus'; // 'focus' or 'rest'
+    let pomodoroTotalTime = FOCUS_TIME;
+    
+    function updatePomodoroDisplay(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      
+      pomodoroDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      
+      // Update progress bar
+      const progress = ((pomodoroTotalTime - seconds) / pomodoroTotalTime) * 100;
+      pomodoroProgress.style.width = `${progress}%`;
+    }
+    
+    function startPomodoroTimer() {
+      if (!pomodoroInterval) {
+        pomodoroInterval = setInterval(() => {
+          pomodoroTimeLeft--;
+          
+          if (pomodoroTimeLeft <= 0) {
+            clearInterval(pomodoroInterval);
+            pomodoroInterval = null;
+            alarmSound.play();
+            
+            // Switch modes
+            if (pomodoroMode === 'focus') {
+              pomodoroMode = 'rest';
+              pomodoroTimeLeft = REST_TIME;
+              pomodoroTotalTime = REST_TIME;
+              pomodoroStatus.textContent = 'Rest Time';
+              pomodoroStatus.classList.remove('status-focus');
+              pomodoroStatus.classList.add('status-rest');
+            } else {
+              pomodoroMode = 'focus';
+              pomodoroTimeLeft = FOCUS_TIME;
+              pomodoroTotalTime = FOCUS_TIME;
+              pomodoroStatus.textContent = 'Focus Time';
+              pomodoroStatus.classList.remove('status-rest');
+              pomodoroStatus.classList.add('status-focus');
+            }
+            
+            updatePomodoroDisplay(pomodoroTimeLeft);
+            startPomodoroTimer(); // Auto-start the next phase
+          } else {
+            updatePomodoroDisplay(pomodoroTimeLeft);
+          }
+        }, 1000);
+        
+        pomodoroStartBtn.disabled = true;
+        pomodoroStopBtn.disabled = false;
+        pomodoroResetBtn.disabled = false;
+      }
+    }
+    
+    function stopPomodoroTimer() {
+      clearInterval(pomodoroInterval);
+      pomodoroInterval = null;
+      pomodoroStartBtn.disabled = false;
+      pomodoroStopBtn.disabled = true;
+    }
+    
+    function resetPomodoroTimer() {
+      clearInterval(pomodoroInterval);
+      pomodoroInterval = null;
+      pomodoroMode = 'focus';
+      pomodoroTimeLeft = FOCUS_TIME;
+      pomodoroTotalTime = FOCUS_TIME;
+      pomodoroStatus.textContent = 'Focus Time';
+      pomodoroStatus.classList.remove('status-rest');
+      pomodoroStatus.classList.add('status-focus');
+      updatePomodoroDisplay(pomodoroTimeLeft);
+      pomodoroProgress.style.width = '0%';
+      pomodoroStartBtn.disabled = false;
+      pomodoroStopBtn.disabled = true;
+      pomodoroResetBtn.disabled = true;
+    }
+    
+    pomodoroStartBtn.addEventListener('click', startPomodoroTimer);
+    pomodoroStopBtn.addEventListener('click', stopPomodoroTimer);
+    pomodoroResetBtn.addEventListener('click', resetPomodoroTimer);
+    
+    // Init Pomodoro display
+    updatePomodoroDisplay(FOCUS_TIME);
+    
+    // Add subtle animations for button presses
+    const buttons = document.querySelectorAll('button:not(.dark-mode-toggle)');
+    buttons.forEach(button => {
+      button.addEventListener('mousedown', () => {
+        if (!button.disabled) {
+          button.style.transform = 'scale(0.98)';
+        }
+      });
+      button.addEventListener('mouseup', () => {
+        if (!button.disabled) {
+          button.style.transform = '';
+        }
+      });
+      button.addEventListener('mouseleave', () => {
+        if (!button.disabled) {
+          button.style.transform = '';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
